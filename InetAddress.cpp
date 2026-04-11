@@ -11,6 +11,10 @@ InetAddress::InetAddress(const sockaddr_in addr):addr_(addr)
 {
 
 }
+InetAddress::InetAddress()
+{
+
+}
 
 InetAddress::~InetAddress()
 {
@@ -28,4 +32,9 @@ uint16_t InetAddress::port() const
 const sockaddr *InetAddress::addr() const
 {
     return (sockaddr *)&addr_;
+}
+
+void InetAddress::setaddr(sockaddr_in clientaddr)
+{
+    addr_=clientaddr;
 }
