@@ -16,6 +16,7 @@
 #include <sys/epoll.h>
 #include <netinet/tcp.h>      // TCP_NODELAY需要包含这个头文件。
 #include <iostream>
+#include "InetAddress.h"
 
 using namespace std;
 
@@ -24,7 +25,7 @@ using namespace std;
 //设置非阻塞的IO,????
 void setnonblocking(int fd)
 {
-    fcntl(fd,fcntl(fd,F_GETFL)|O_NONBLOCK);
+    fcntl(fd, F_SETFL,fcntl(fd,F_GETFL)|O_NONBLOCK);
 }
 
 int main(int argc,char *argv[])
@@ -47,14 +48,16 @@ int main(int argc,char *argv[])
     setsockopt(listenfd,SOL_SOCKET,SO_REUSEPORT,&opt,static_cast<socklen_t>(sizeof opt));
     setsockopt(listenfd,SOL_SOCKET,TCP_NODELAY,&opt,static_cast<socklen_t>(sizeof opt));
     setsockopt(listenfd,SOL_SOCKET,SO_KEEPALIVE,&opt,static_cast<socklen_t>(sizeof opt));
-
+/*
     struct sockaddr_in servaddr;
     memset(&servaddr,0,sizeof(servaddr));
     servaddr.sin_addr.s_addr=inet_addr(argv[1]);
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(atoi(argv[2]));
-
-    if((bind(listenfd,(sockaddr *)&servaddr,sizeof(servaddr)))==-1)
+*/
+    InetAddress servaddr(argv[1],atoi(argv[2]));
+    
+    if((bind(listenfd,servaddr.addr(),sizeof(sockaddr_in)))==-1)
     {
         printf("bind fail\n");
         close(listenfd);
@@ -96,10 +99,10 @@ int main(int argc,char *argv[])
         for(int i=0;i<fdnums;i++)
         {
             //根据不同的数据结构分类
-            if(evs[i].events&EPOLLRDHUP)//集中events记不住？？？
+            if(evs[i].events&EPOLLRDHUP)
             {
                 //这里表示对方已关闭
-                cout<<"1client(eventfd=%d)"<<evs[i].data.fd<<"disconnect"<<endl;
+                cout<<"client(eventfd)"<<evs[i].data.fd<<"disconnect"<<endl;
                 close(evs[i].data.fd);
             }
             else if(evs[i].events&(EPOLLIN|EPOLLET))
@@ -108,15 +111,16 @@ int main(int argc,char *argv[])
                 if(evs[i].data.fd==listenfd)//这里就要开始accept了,这里就会有新的fd了
                 {
 
-                    struct sockaddr_in clientaddr;
-                    socklen_t clientalen=sizeof(clientaddr);
+                    struct sockaddr_in perraddr;
+                    socklen_t len=sizeof(perraddr);
                     //两个函数的区别accept与accept4，匹配
-                    int clientfd=accept4(evs[i].data.fd,(struct sockaddr *)&clientaddr,&clientalen,SOCK_NONBLOCK);
+                    int clientfd=accept4(evs[i].data.fd,(struct sockaddr *)&perraddr,&len,SOCK_NONBLOCK);
                     //打印一下日志
                     cout << "accept client: fd=" << clientfd 
-                            << ", ip=" << inet_ntoa(clientaddr.sin_addr) 
-                            << ", port=" << ntohs(clientaddr.sin_port) << endl;
+                            << ", ip=" << inet_ntoa(perraddr.sin_addr) 
+                            << ", port=" << ntohs(perraddr.sin_port) << endl;
                     //这里需要挂到树上
+                    InetAddress clientaddr(perraddr);
                     ev.data.fd=clientfd;
                     ev.events=EPOLLIN|EPOLLET;
 
@@ -147,7 +151,7 @@ int main(int argc,char *argv[])
                         }
                         else if(nread==0)   // 客户端连接已断开，和上面的重复了
                         {
-                            printf("2client(eventfd=%d) disconnected.\n",evs[i].data.fd);
+                            printf("client(eventfd=%d) disconnected.\n",evs[i].data.fd);
                             close(evs[i].data.fd);            // 关闭客户端的fd。
                             break;
                         }
@@ -161,7 +165,7 @@ int main(int argc,char *argv[])
             }
             else 
             {
-                 printf("3client(eventfd=%d) error.\n",evs[i].data.fd);
+                 printf("client(eventfd=%d) error.\n",evs[i].data.fd);
                 close(evs[i].data.fd);            // 关闭客户端的fd。
             }
         }
@@ -169,3 +173,6 @@ int main(int argc,char *argv[])
 
     return 0;
 }
+
+
+//c++ struct 可以省略
