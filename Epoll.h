@@ -1,4 +1,5 @@
 #pragma once
+#include "Channel.h"
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <errno.h>
@@ -8,6 +9,8 @@
 #include <cstdint>
 #include <unistd.h>
 #include <iostream>
+
+class Channel;
 class Epoll
 {
     private:
@@ -19,8 +22,10 @@ class Epoll
         ~Epoll();   //关闭epollfd_
 
         //思考epoll的三个函数功能，进行封装
-        void addfd(int fd,uint32_t op); //把fd和它需要监视的事件添加到红黑树上面。
+        //void addfd(int fd,uint32_t op); //把fd和它需要监视的事件添加到红黑树上面。更新户
+        void updatechannel(Channel *ch);    //channel添加或者更新到红黑树上，channel中有fd，也有需要监视的事件
         //这里很妙使用了stl里面的vector去存放epoll_wait的evs;
         //还有一个参数timeout
-        std::vector<epoll_event>loop(int timeout=-1);   //运行epoll_wait(),等待事件的发生，已发生的事件用vector返回
+        //std::vector<epoll_event>loop(int timeout=-1);   //运行epoll_wait(),等待事件的发生，已发生的事件用vector返回
+        std::vector<Channel *>loop(int timeout=-1);   //运行epoll_wait(),等待事件的发生，已发生的事件用vector返回
 };
