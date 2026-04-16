@@ -2,7 +2,12 @@
 #include <cstdint>
 #include <sys/epoll.h>
 #include "Epoll.h"
+#include "InetAddress.h"
+#include "Socket.h"
+#include <iostream>
 
+class InetAddress;
+class Socket;
 class Epoll;
 //这个Channel的作用不再是底层，而是更细致的“状态管理”,
 // 与Epoll是协作的关系，一个Channel对应一个Epoll,一个Epoll对应多个Channel
@@ -16,8 +21,10 @@ class Channel
         //需要分为event_ revent_ 是由于epoll_ctl（）是传入参数，epoll_wait（）是传出参数
         uint32_t events_;    //fd_需要监听的事件listenfd和clientfd需要监听EPOLLIN ,但是clientfd还需要监听EPOLLOUT
         uint32_t revents_;   //fd_已发生的事件
+
+        bool islisten_=false;    //listenfd取值为true，客户端连上为false
     public:
-        Channel(Epoll *ev,int fd);
+        Channel(Epoll *ev,int fd,bool islisten);
         ~Channel();
         //这个可以从Channel对应(管理)一个fd，fd相关的状态
         int fd();
@@ -27,5 +34,7 @@ class Channel
         void setrevent(uint32_t ev);   //外面的将uint32_t ev传进来，给revent_赋值
         bool inepoll(); //返回inepoll_成员
         uint32_t events();
-        uint32_t revent();
+        uint32_t revents();
+
+        void handleevent(Socket *servsock); //事件处理函数，epoll_wait()返回的时候，执行它,因为缺少servsock，所以这里传参进去
 };
