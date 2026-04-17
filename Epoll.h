@@ -1,5 +1,5 @@
 #pragma once
-#include "Channel.h"
+
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <errno.h>

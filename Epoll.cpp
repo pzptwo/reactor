@@ -1,7 +1,8 @@
-#include "Epoll.h"
+
 #include <cstdio>
 #include <sys/epoll.h>
-
+#include "Channel.h"
+#include "Epoll.h"
 using namespace std;
  //在构造函数里面创建了epollfd_
 Epoll::Epoll()

@@ -13,7 +13,7 @@ int main (int argc,char * argv[])
     if(argc!=3)
     {
         printf("usage :ip port\n ");//argv顺序存
-        printf("./client 192.168.229.128 5000\n");
+        printf("./client 192.168.152.128 5000\n");
         return -1;
     }
     int sockfd;
