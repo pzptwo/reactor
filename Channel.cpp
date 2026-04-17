@@ -1,6 +1,7 @@
 #include "Channel.h"
 #include "EventLoop.h"
 #include "Epoll.h"
+#include "Connection.h"
 
 using namespace std;
 
@@ -86,7 +87,7 @@ void Channel::handleevent()
     }
     else 
     {
-            printf("client(eventfd=%d) error.\n",fd_);
+        printf("client(eventfd=%d) error.\n",fd_);
         close(fd_);            // 关闭客户端的fd。
     }
 }
@@ -137,12 +138,14 @@ void Channel::newConnection(Socket *servsock)
             << ", port=" << clientaddr.port()<< endl;
     //为新用户端连接准备读事件，并添加到epoll
     
-    
+    /*
     Channel *clientchannel=new Channel(loop_,clientsock->fd());
     clientchannel->setreadback(std::bind(&Channel::onMessage,clientchannel));
     clientchannel->useet();
     clientchannel->enablereading();
     //clientchannel.updatechannel(clientchannel);
+    */
+    Connection *conn=new Connection(loop_,clientsock);//这里也没有释放，为了耦合低
 }
 
 void Channel::setreadback(std::function<void ()>fn)
