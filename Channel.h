@@ -31,7 +31,7 @@ class Channel
         //与c的回调不同，这里要用容器（因为结构体的this）
         std::function<void ()>readback_;    //这里的参数是调用的时候没有参数，与bind不同
     public:
-        Channel(EventLoop *loop,int fd);
+        Channel(EventLoop *loop,int fd);    //Channel是Acceptor和Connection的下层类
         ~Channel();
         //这个可以从Channel对应(管理)一个fd，fd相关的状态
         int fd();
@@ -47,5 +47,5 @@ class Channel
         //继续修改，由于不能定制功能，采用回调,定义接口
         void setreadback(std::function<void ()>fn); //
         void onMessage();   //这里是已连接的fd，客户端
-        void newConnection(Socket *servsock);   //这里是新的连接请求
+        //void newConnection(Socket *servsock);   //这里是新的连接请求
 };

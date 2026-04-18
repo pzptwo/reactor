@@ -13,4 +13,6 @@ class Acceptor
     public:
         Acceptor(EventLoop *loop,const std::string ip,const uint16_t port); //  
         ~Acceptor();
+        //这里的优化是由于newconnection是由acceptor产生的，不用在下层类Channel中写了
+        void newConnection();   //这里有成团变量不用参数
 };
