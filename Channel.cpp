@@ -61,8 +61,7 @@ void Channel::handleevent()
     if(revents_&EPOLLRDHUP)
     {
         //这里表示对方已关闭
-        cout<<"client(eventfd)"<<fd_<<"disconnect"<<endl;
-        close(fd_);
+        closeback_();
     }
     else if(revents_&(EPOLLIN|EPOLLPRI))
     {
@@ -86,8 +85,7 @@ void Channel::handleevent()
     }
     else 
     {
-        printf("client(eventfd=%d) error.\n",fd_);
-        close(fd_);            // 关闭客户端的fd。
+        errorback_();
     }
 }
 //
@@ -118,31 +116,22 @@ void Channel::onMessage()
         }
         else if(nread==0)   // 客户端连接已断开，和上面的重复了
         {
-            printf("client(eventfd=%d) disconnected.\n",fd_);
-            close(fd_);            // 关闭客户端的fd。
+            closeback_();            // 关闭客户端的fd。
             break;
         }
     }
 } 
-/*
-//这里是新的连接请求,实在servsock 这个管道符里面
-void Channel::newConnection(Socket *servsock)
-{
-    //这里用指针的原因是在堆区？还是栈忘了哈哈哈哈，就是防止这个{}结束释放clientsock
-    //这里要分清楚在accept这还是属于listenfd(我的理解)
-    InetAddress clientaddr;//如果用别的构造函数，会咋样
-    Socket *clientsock=new Socket(servsock->accept(clientaddr));//(相当于传进来clientfd)
-    //打印一下日志
-    cout << "accept client: fd=" << clientsock->fd()
-            << ", ip=" << clientaddr.ip()
-            << ", port=" << clientaddr.port()<< endl;
-    //为新用户端连接准备读事件，并添加到epoll
-    
-    Connection *conn=new Connection(loop_,clientsock);//这里也没有释放，为了耦合低
-}
-*/
 
 void Channel::setreadback(std::function<void ()>fn)
 {
     readback_=fn;
+}
+
+void Channel::setcloseback(std::function<void ()>fn)
+{
+    closeback_=fn;
+}
+void Channel::seterrorback(std::function<void ()>fn)
+{
+    errorback_=fn;
 }

@@ -27,6 +27,16 @@ int Socket::fd() const
 {
     return fd_;
 }
+//返回ip_
+std::string Socket::ip()
+{
+    return ip_;
+}
+
+uint16_t Socket::port()
+{
+    return port_;
+}
 void Socket::setreuseaddr(bool on)
 {
     int opt=on?1:0;
@@ -57,6 +67,8 @@ void Socket::bind(const InetAddress &servaddr)
         close(fd_);
         exit(-1);
     }
+    ip_=servaddr.ip();
+    port_=servaddr.port();
 } 
 
 void Socket::listen(int nn)
@@ -78,5 +90,7 @@ int Socket::accept(InetAddress &clientaddr)
     //打印一下日志
     //InetAddress clientaddr(perraddr);//为啥不能，int Socket::accept(InetAddress &clientaddr（参数？？？）)
     clientaddr.setaddr(perraddr);
+    ip_=clientaddr.ip();
+    port_=clientaddr.port();
     return clientfd;
 }
