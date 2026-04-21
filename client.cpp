@@ -41,27 +41,29 @@ int main (int argc,char * argv[])
     cout<<"connect tcpepoll"<<endl;
     char buf[1024];
     
-
-    for(int i=0;i<1000;i++)
+//发送与接收
+    for(int i=0;i<2;i++)
     {
         memset(buf,0,sizeof(buf));
-        printf("输入：");
-        cin>>buf;
-        if((send(sockfd,buf,strlen(buf),0))<=0)
-        {
-            printf("write fail\n");
-            close (sockfd);
-            return -1;
-        }
-        //发送与接收
+        sprintf(buf,"第%d次",i);
+        int len=sizeof(buf);
+        char tmpbuf[1024+sizeof(len)];  //1028
+        memset(tmpbuf,0,sizeof(tmpbuf));
+        //分两次接受 报文1 报文2 ，后面根据报文一拿到报文2
+        memcpy(tmpbuf,&len,sizeof(len));    //先发头部
+        memcpy(tmpbuf+sizeof(len),buf,sizeof(buf));
+        //int tmplen=sizeof(tmpbuf);,非常错误，这不是动态数组
 
+        send(sockfd,tmpbuf,len+sizeof(len),0);
+        
+    }
+        //这里是读取
+        for(int i=0;i<2;i++)
+    {
+        int len;
+        recv(sockfd,&len,sizeof(len),0);    //读取头部
         memset(buf,0,sizeof(buf));
-        if((recv(sockfd,buf,sizeof(buf),0))<=0)
-        {
-            printf("read fail\n");
-            close (sockfd);
-            return -1;
-        }
+        recv(sockfd,buf,len,0);     //读取报文，从fd里面读取
         cout<<"recv"<<buf<<endl;
     }
     return 0;

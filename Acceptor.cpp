@@ -33,13 +33,9 @@ void Acceptor::newConnection()
     //这里要分清楚在accept这还是属于listenfd(我的理解)
     InetAddress clientaddr;//如果用别的构造函数，会咋样
     Socket *clientsock=new Socket(servsock_->accept(clientaddr));//(相当于传进来clientfd)
-    //打印一下日志
-    // cout << "accept client: fd=" << clientsock->fd()
-    //         << ", ip=" << clientaddr.ip()
-    //         << ", port=" << clientaddr.port()<< endl;
-    //为新用户端连接准备读事件，并添加到epoll
     
     //Connection *conn=new Connection(loop_,clientsock);//这里也没有释放，为了耦合低
+    clientsock->setipport(clientaddr.ip(),clientaddr.port());
     newConnectioncb_(clientsock);
 }
 

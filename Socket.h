@@ -22,6 +22,8 @@ class Socket
         int fd() const;
         std::string ip(); //返回ip_
         uint16_t port();    //返回port_
+
+        void setipport(const std::string &ip,uint16_t port);
         void setreuseaddr(bool on);
         void setreuseport(bool on);
         void settcpnodelay(bool on);

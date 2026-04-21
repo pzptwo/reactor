@@ -1,6 +1,7 @@
 #include "Channel.h"
 #include "EventLoop.h"
 #include "Epoll.h"
+#include <sys/epoll.h>
 
 using namespace std;
 
@@ -29,6 +30,24 @@ void Channel::useet()
 void Channel::enablereading()
 {
     events_=events_|EPOLLIN;
+    loop_->updatechannel(this);
+}
+
+void Channel::disablereading()
+{
+    events_=events_&~EPOLLIN;
+    loop_->updatechannel(this);
+}
+
+void Channel::enablewriting()
+{
+    events_=events_|EPOLLOUT;
+    loop_->updatechannel(this);
+}
+
+void Channel::disablewriting()
+{
+    events_=events_&~EPOLLOUT;
     loop_->updatechannel(this);
 }
 //把inepoll_成员设置为true;
@@ -81,7 +100,9 @@ void Channel::handleevent()
     //后面的events类型
     else if(revents_&EPOLLOUT) // 有数据需要写，暂时没有代码，以后再说。
     {
-
+        //要用回调写
+        printf("EPOLLOUT\n");
+        writeback_();
     }
     else 
     {
@@ -91,6 +112,8 @@ void Channel::handleevent()
 //
 
 //这里是已连接的fd，客户端
+/*
+
 void Channel::onMessage()
 {
     char buffer[1024];
@@ -121,6 +144,7 @@ void Channel::onMessage()
         }
     }
 } 
+    */
 
 void Channel::setreadback(std::function<void ()>fn)
 {
@@ -134,4 +158,9 @@ void Channel::setcloseback(std::function<void ()>fn)
 void Channel::seterrorback(std::function<void ()>fn)
 {
     errorback_=fn;
+}
+
+void Channel::setwriteback(std::function<void ()>fn)
+{
+    writeback_=fn;
 }

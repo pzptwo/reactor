@@ -39,4 +39,5 @@ class TcpServer
         void newConnection(Socket *clientsock);   //处理新连接上来的
         void closecallback(Connection *conn);   //我感觉取名有点问题
         void errorcallback(Connection * conn);
+        void slovemessage(Connection* conn,std::string message);
 };

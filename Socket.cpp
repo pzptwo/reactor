@@ -67,8 +67,8 @@ void Socket::bind(const InetAddress &servaddr)
         close(fd_);
         exit(-1);
     }
-    ip_=servaddr.ip();
-    port_=servaddr.port();
+    
+    setipport(servaddr.ip(),servaddr.port());
 } 
 
 void Socket::listen(int nn)
@@ -90,7 +90,12 @@ int Socket::accept(InetAddress &clientaddr)
     //打印一下日志
     //InetAddress clientaddr(perraddr);//为啥不能，int Socket::accept(InetAddress &clientaddr（参数？？？）)
     clientaddr.setaddr(perraddr);
-    ip_=clientaddr.ip();
-    port_=clientaddr.port();
     return clientfd;
+}
+
+//相当于设置接口，外面可以调用我的Socket里面的成员变量
+void Socket::setipport(const std::string &ip,uint16_t port)
+{
+    ip_=ip;
+    port_=port;
 }

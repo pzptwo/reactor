@@ -33,6 +33,7 @@ class Channel
         //因为两种类型，所以分为两种回调函数
         std::function<void ()>closeback_; 
         std::function<void ()>errorback_; 
+        std::function<void ()>writeback_;
     public:
         Channel(EventLoop *loop,int fd);    //Channel是Acceptor和Connection的下层类
         ~Channel();
@@ -40,6 +41,9 @@ class Channel
         int fd();
         void useet();   //采用边缘触发
         void enablereading();//让epoll_wait监听fd_的事件（这里是读）
+        void disablereading();
+        void enablewriting();
+        void disablewriting();
         void setinepoll();  //把inepoll_成员设置为true;
         void setrevent(uint32_t ev);   //外面的将uint32_t ev传进来，给revent_赋值
         bool inepoll(); //返回inepoll_成员
@@ -49,6 +53,7 @@ class Channel
         void handleevent(); //事件处理函数，epoll_wait()返回的时候，执行它,因为缺少servsock，所以这里传参进去
         //继续修改，由于不能定制功能，采用回调,定义接口
         void setreadback(std::function<void ()>fn); //
+        void setwriteback(std::function<void ()>fn); //
         void onMessage();   //这里是已连接的fd，客户端
         //void newConnection(Socket *servsock);   //这里是新的连接请求
 

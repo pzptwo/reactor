@@ -2,7 +2,10 @@
 #include "EventLoop.h"
 #include "Socket.h"
 #include "Channel.h"
+#include <cstddef>
 #include <functional>
+#include <string>
+#include "Buffer.h"
 
 //监听的功能
 class Connection 
@@ -13,6 +16,11 @@ class Connection
         Channel *clientchannel_;    //  Acceptor对应的Channel，在构造函数中创建。
         std::function<void (Connection *)> closecallback_;
         std::function<void (Connection *)> errorcallback_;
+        std::function<void(Connection*,std::string )> slovemessagecallback_;
+
+        Buffer inputbuffer_;
+        Buffer outputbuffer_;
+        
     public:
         Connection(EventLoop *loop,Socket *clientsock); //  
         ~Connection();
@@ -26,4 +34,11 @@ class Connection
 
         void setcloseback(std::function<void (Connection *)>fn);
         void seterrorback(std::function<void (Connection *)>fn);
+        void setslovecb(std::function<void(Connection*,std::string )>fn);
+        void onMessage();
+
+        //可以是把数据先放到outbuffer,然后注册写事件，
+        void sendto_ob(const char* data,size_t size);
+
+        void writecallback();
 };

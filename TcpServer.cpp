@@ -34,6 +34,7 @@ void TcpServer::newConnection(Socket *clientsock)
     Connection *conn=new Connection(&loop_,clientsock);//这里也没有释放，为了耦合低
     conn->setcloseback(std::bind(&TcpServer::closecallback,this,std::placeholders::_1));
     conn->seterrorback(std::bind(&TcpServer::errorcallback,this,std::placeholders::_1));
+    conn->setslovecb(std::bind(&TcpServer::slovemessage,this,std::placeholders::_1,std::placeholders::_2));
     cout << "new Connection: fd=" << clientsock->fd()
             << ", ip=" << clientsock->ip()
             << ", port=" <<  clientsock->port()<< endl;
@@ -54,4 +55,17 @@ void TcpServer::errorcallback(Connection* conn)
     //close(conn->fd());
     conns_.erase(conn->fd());
     delete conn;
+}
+
+void TcpServer::slovemessage(Connection* conn,std::string message)
+{
+    message="reply"+message;
+    //发送模式为头加内容
+    int len=message.size();
+    //这里用string，char都行
+    //相当于进行增加报头，但是是拷贝构造？？？
+    std::string tmpbuf((char *)&len,sizeof(len));
+    tmpbuf.append(message);
+    //send(conn->fd(),tmpbuf.data(),tmpbuf.size(),0);   //对于Socket，这里有隐藏的bug
+    conn->sendto_ob(tmpbuf.data(),tmpbuf.size());   //作用是
 }
