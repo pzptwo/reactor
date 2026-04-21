@@ -59,6 +59,11 @@ void Connection::setslovecb(std::function<void(Connection*,std::string )>fn)
     slovemessagecallback_=fn;
 }
 
+ void Connection::setsendCompletecb(std::function<void (Connection *)>fn)
+ {
+    sendCompletecb_=fn;
+ }
+
 using namespace std;
 void Connection::onMessage()
 {
@@ -129,5 +134,8 @@ void Connection::writecallback()
     if(writen>0) outputbuffer_.erase(0, writen);
 
     //说明没有数据了，发送成功，取消写事件
-    if(outputbuffer_.size()==0) clientchannel_->disablewriting();
+    if(outputbuffer_.size()==0) 
+    clientchannel_->disablewriting();
+
+    sendCompletecb_(this);
 }

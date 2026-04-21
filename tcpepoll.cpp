@@ -1,4 +1,4 @@
-#include "TcpServer.h"
+#include "EchoServer.h"
 using namespace std;
 
 
@@ -35,9 +35,11 @@ int main(int argc,char *argv[])
     servchannel->setreadback(std::bind(&Channel::newConnection,servchannel,&servsock));
     servchannel->enablereading();
     */
-    TcpServer tcpserver(argv[1],atoi(argv[2]));
-    tcpserver.start();
-    
+    // TcpServer tcpserver(argv[1],atoi(argv[2]));
+    // tcpserver.start();
+    EchoServer echoserver(argv[1],atoi(argv[2]));
+    echoserver.start();
+
     return 0;
 }
 
