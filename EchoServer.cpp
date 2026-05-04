@@ -42,17 +42,21 @@ void EchoServer::HandleError(Connection * conn)
 {
     cout<<"EchoServer conn error"<<endl;
 }
-void EchoServer::HAndleSlovemessage(Connection* conn,std::string message)
+void EchoServer::HAndleSlovemessage(Connection* conn,std::string & message)
 {
     message="reply"+message;
     //发送模式为头加内容
+
+    /*
+    //报文长度（头部）+报文内容
     int len=message.size();
     //这里用string，char都行
     //相当于进行增加报头，但是是拷贝构造？？？
     std::string tmpbuf((char *)&len,sizeof(len));
     tmpbuf.append(message);
-    //send(conn->fd(),tmpbuf.data(),tmpbuf.size(),0);   //对于Socket，这里有隐藏的bug
-    conn->sendto_ob(tmpbuf.data(),tmpbuf.size()); 
+    //send(conn->fd(),tmpbuf.data(),tmpbuf.size(),0);   //对于Socket
+    */
+    conn->sendto_ob(message.data(),message.size()); 
 
 }
 //对于最上层，要知道，数据已经发送完毕

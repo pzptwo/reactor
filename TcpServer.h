@@ -35,7 +35,7 @@ class TcpServer
         std::function<void (Connection *)> newConnectioncb_;
         std::function<void (Connection *)> closecb_;
         std::function<void (Connection *)> errorcb_;
-        std::function<void (Connection *,std::string )> slovemessagecb_;
+        std::function<void (Connection *,std::string &)> slovemessagecb_;
         std::function<void (Connection *)> sendCompletecb_;
         std::function<void (EventLoop *)> epolltimeoutcb_;
     public:
@@ -47,7 +47,7 @@ class TcpServer
         void newConnection(Socket *clientsock);   //处理新连接上来的
         void closecallback(Connection *conn);   //我感觉取名有点问题
         void errorcallback(Connection * conn);
-        void slovemessage(Connection* conn,std::string message);
+        void slovemessage(Connection* conn,std::string &message );
 
         //对于最上层，要知道，数据已经发送完毕
         void sendComplete(Connection *conn);
@@ -58,7 +58,7 @@ class TcpServer
         void setnewConnectioncb(std::function<void (Connection *)>fn);
         void setclosecb(std::function<void (Connection *)>fn);
         void seterrorcb(std::function<void (Connection *)>fn);
-        void setslovemessagecb(std::function<void (Connection *,std::string)>fn);
+        void setslovemessagecb(std::function<void (Connection *,std::string &)>fn);
         void setsendCompletecb(std::function<void (Connection *)>fn);
         void setepolltimeoutcb(std::function<void (EventLoop *)>fn);
 };

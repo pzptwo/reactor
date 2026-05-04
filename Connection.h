@@ -16,7 +16,7 @@ class Connection
         Channel *clientchannel_;    //  Acceptor对应的Channel，在构造函数中创建。
         std::function<void (Connection *)> closecallback_;
         std::function<void (Connection *)> errorcallback_;
-        std::function<void(Connection*,std::string )> slovemessagecallback_;
+        std::function<void(Connection*,std::string &)> slovemessagecallback_;
         //取消完写事件，就可以是发送完毕
         std::function<void (Connection *)> sendCompletecb_;
         
@@ -36,7 +36,7 @@ class Connection
 
         void setcloseback(std::function<void (Connection *)>fn);
         void seterrorback(std::function<void (Connection *)>fn);
-        void setslovecb(std::function<void(Connection*,std::string )>fn);
+        void setslovecb(std::function<void(Connection*,std::string &)>fn);
         void setsendCompletecb(std::function<void (Connection *)>fn);
         void onMessage();
 

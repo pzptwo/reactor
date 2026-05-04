@@ -64,7 +64,7 @@ void TcpServer::errorcallback(Connection* conn)
     delete conn;
 }
 
-void TcpServer::slovemessage(Connection* conn,std::string message)
+void TcpServer::slovemessage(Connection* conn,std::string &message)
 {
     if(slovemessagecb_) slovemessagecb_(conn,message);
 }
@@ -98,7 +98,7 @@ void TcpServer::seterrorcb(std::function<void (Connection *)>fn)
 {
     errorcb_=fn;
 }
-void TcpServer::setslovemessagecb(std::function<void (Connection *,std::string)>fn)
+void TcpServer::setslovemessagecb(std::function<void (Connection *,std::string &) >fn)
 {
     slovemessagecb_=fn;
 }

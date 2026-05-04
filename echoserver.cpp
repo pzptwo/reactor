@@ -14,7 +14,7 @@ int main(int argc,char *argv[])
     if(argc!=3)
     {
         printf("usage :ip port \n ");//argv顺序存
-        printf("./tcpepoll 192.168.152.128  5000\n\n");
+        printf("./echoserver 192.168.152.128  5000\n\n");
         return -1;
     }
 

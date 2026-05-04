@@ -19,7 +19,7 @@ class EchoServer
         void HangleNewConnection(Connection *conn);   //处理新连接上来的,Socket *clientsock这里不行，类之间的关系而且这样直接跳过来outbuffer
         void HandleClose(Connection *conn);   //我感觉取名有点问题
         void HandleError(Connection * conn);
-        void HAndleSlovemessage(Connection* conn,std::string message);
+        void HAndleSlovemessage(Connection* conn,std::string & message);
 
         //对于最上层，要知道，数据已经发送完毕
         void HandleSendComplete(Connection *conn);

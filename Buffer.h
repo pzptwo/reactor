@@ -12,6 +12,7 @@ class Buffer
         Buffer();
         ~Buffer();
         void append(const char *data,size_t size);
+        void appendwithhead(const char *data,size_t size);  //增加报头+内容
         const char* data();//
         size_t size();
         void erase(size_t pos,size_t n);

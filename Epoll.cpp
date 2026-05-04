@@ -110,7 +110,7 @@ std::vector<Channel *>Epoll::loop(int timeout)
         }
         else if(fdnums==0)
         {
-            cout<<"超时"<<endl;
+            //cout<<"超时"<<endl;
             return channels;
         }
         //这里是没问题的，默认大于0的文件描述符
