@@ -57,6 +57,8 @@ int main (int argc,char * argv[])
         send(sockfd,tmpbuf,len+sizeof(len),0);
         
     }
+        //这里就是io
+        sleep(1);   return 0;
         //这里是读取
         for(int i=0;i<1;i++)
     {

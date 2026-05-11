@@ -34,10 +34,12 @@ TcpServer::~TcpServer()
     //delete loop_;
     delete acceptor_;
     delete mainloop_;
+    /*
     for(auto &aa:conns_)
     {
         delete aa.second;
     }
+    */
 }
 
 void TcpServer::start()
@@ -51,7 +53,7 @@ void TcpServer::newConnection(Socket *clientsock)
 {
     //Connection *conn=new Connection(mainloop_,clientsock);//这里也没有释放，为了耦合低
     //让从事件循环运行连接
-    Connection *conn=new Connection(subloop_[clientsock->fd()%threadNum_],clientsock);
+    spConnection conn(new Connection(subloop_[clientsock->fd()%threadNum_],clientsock));
     conn->setcloseback(std::bind(&TcpServer::closecallback,this,std::placeholders::_1));
     conn->seterrorback(std::bind(&TcpServer::errorcallback,this,std::placeholders::_1));
     conn->setslovecb(std::bind(&TcpServer::slovemessage,this,std::placeholders::_1,std::placeholders::_2));
@@ -64,30 +66,30 @@ void TcpServer::newConnection(Socket *clientsock)
     if(newConnectioncb_)newConnectioncb_(conn); //新建连接的时候，要等连接建立好才开始
 }
 
-void TcpServer::closecallback(Connection * conn)
+void TcpServer::closecallback(spConnection conn)
 {
     if(closecb_) closecb_(conn); //关闭连接的时候，则是需要先回调
     //printf("client(eventfd=%d) disconnected.\n",conn->fd());
     //close(fd()); 
     conns_.erase(conn->fd());
-    delete conn;
+    //delete conn;
 }
 
-void TcpServer::errorcallback(Connection* conn)
+void TcpServer::errorcallback(spConnection conn)
 {
     if(errorcb_)errorcb_(conn);
     //printf("client(eventfd=%d) error.\n",conn->fd());
     //close(conn->fd());
     conns_.erase(conn->fd());
-    delete conn;
+    //delete conn;
 }
 
-void TcpServer::slovemessage(Connection* conn,std::string &message)
+void TcpServer::slovemessage(spConnection conn,std::string &message)
 {
     if(slovemessagecb_) slovemessagecb_(conn,message);
 }
 
-void TcpServer::sendComplete(Connection *conn)
+void TcpServer::sendComplete(spConnection conn)
 {
     
     //参数一定要conn，表明是这个连接的
@@ -104,23 +106,23 @@ void TcpServer::epolltimeout(EventLoop *loop)
     
 }
 
-void TcpServer::setnewConnectioncb(std::function<void (Connection *)>fn)
+void TcpServer::setnewConnectioncb(std::function<void (spConnection)>fn)
 {
     newConnectioncb_=fn;
 }
-void TcpServer::setclosecb(std::function<void (Connection *)>fn)
+void TcpServer::setclosecb(std::function<void (spConnection)>fn)
 {
     closecb_=fn;
 }
-void TcpServer::seterrorcb(std::function<void (Connection *)>fn)
+void TcpServer::seterrorcb(std::function<void (spConnection)>fn)
 {
     errorcb_=fn;
 }
-void TcpServer::setslovemessagecb(std::function<void (Connection *,std::string &) >fn)
+void TcpServer::setslovemessagecb(std::function<void (spConnection,std::string &) >fn)
 {
     slovemessagecb_=fn;
 }
-void TcpServer::setsendCompletecb(std::function<void (Connection *)>fn)
+void TcpServer::setsendCompletecb(std::function<void (spConnection)>fn)
 {
     sendCompletecb_=fn;
 }

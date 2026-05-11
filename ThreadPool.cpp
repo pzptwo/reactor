@@ -62,6 +62,7 @@ ThreadPool::~ThreadPool()
     }
 }
 /*
+//测试
 void way1(){
     printf("飞起来；\n");
 }
@@ -81,5 +82,42 @@ int main()
     sleep(1);
     threadpool.addtask(std::bind(way3));
     sleep(1);
+}
+*/
+/*
+//测试,只能指针处理
+
+#include <memory>
+class AA
+{
+    public:
+        void show()
+        {
+            printf("aa\n");
+        }
+    ~AA()
+    {
+        printf("调用了析构函数\n");
+    }
+};
+
+//我想测试的数野指针
+void func(std::shared_ptr<AA>aa)
+{
+    sleep(5);
+    aa->show();
+}
+
+int main()
+{
+    ThreadPool tp(2,"Text");
+    {
+        std::shared_ptr<AA> aa(new AA);
+        tp.addtask(std::bind(&func,aa));
+        //需要手动释放
+    }
+    sleep(10);
+
+    return 0;
 }
 */

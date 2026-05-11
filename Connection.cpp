@@ -17,6 +17,9 @@ Connection::Connection(EventLoop *loop, Socket *clientsock)
 Connection::~Connection() {
   delete clientchannel_;
   delete clientsock_; // 这里相当于我拿走了new的全部
+
+  //打印日志
+  printf("conn已被析构\n");
 }
 
 int Connection::fd() const { return clientsock_->fd(); }
@@ -25,24 +28,24 @@ std::string Connection::ip() { return clientsock_->ip(); }
 // 返回port_
 uint16_t Connection::port() { return clientsock_->port(); }
 
-void Connection::closecallback() { closecallback_(this); }
+void Connection::closecallback() { closecallback_(shared_from_this()); }
 
-void Connection::errorcallback() { errorcallback_(this); }
+void Connection::errorcallback() { errorcallback_(shared_from_this()); }
 
-void Connection::setcloseback(std::function<void(Connection *)> fn) {
+void Connection::setcloseback(std::function<void(spConnection)> fn) {
   closecallback_ = fn;
 }
 
-void Connection::seterrorback(std::function<void(Connection *)> fn) {
+void Connection::seterrorback(std::function<void(spConnection)> fn) {
   errorcallback_ = fn;
 }
 
 void Connection::setslovecb(
-    std::function<void(Connection *, std::string &)> fn) {
+    std::function<void(spConnection, std::string &)> fn) {
   slovemessagecallback_ = fn;
 }
 
-void Connection::setsendCompletecb(std::function<void(Connection *)> fn) {
+void Connection::setsendCompletecb(std::function<void(spConnection)> fn) {
   sendCompletecb_ = fn;
 }
 
@@ -87,7 +90,7 @@ void Connection::onMessage() {
         tmpbuf.append(message);
         send(fd(),tmpbuf.data(),tmpbuf.size(),0);
         */
-        slovemessagecallback_(this, message);
+        slovemessagecallback_(shared_from_this(), message);
       }
       break;
     } else if (nread == 0) // 客户端连接已断开，和上面的重复了
@@ -115,5 +118,5 @@ void Connection::writecallback() {
   if (outputbuffer_.size() == 0)
     clientchannel_->disablewriting();
 
-  sendCompletecb_(this);
+  sendCompletecb_(shared_from_this());
 }
