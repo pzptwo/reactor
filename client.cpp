@@ -42,7 +42,7 @@ int main (int argc,char * argv[])
     char buf[1024];
     
 //发送与接收
-    for(int i=0;i<2;i++)
+    for(int i=0;i<1;i++)
     {
         memset(buf,0,sizeof(buf));
         sprintf(buf,"第%d次",i);
@@ -58,7 +58,7 @@ int main (int argc,char * argv[])
         
     }
         //这里是读取
-        for(int i=0;i<2;i++)
+        for(int i=0;i<1;i++)
     {
         int len;
         recv(sockfd,&len,sizeof(len),0);    //读取头部
@@ -66,5 +66,6 @@ int main (int argc,char * argv[])
         recv(sockfd,buf,len,0);     //读取报文，从fd里面读取
         cout<<"recv"<<buf<<endl;
     }
-    return 0;
+    sleep(100);
+    //return 0;
 }
