@@ -20,4 +20,7 @@ class EventLoop
 
         void setepolltimeoutcb(std::function<void (EventLoop *)> fn);
         void updatechannel(Channel *ch);
+
+        void removechannel(Channel *ch);
+
 };

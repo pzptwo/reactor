@@ -6,10 +6,10 @@ Connection::Connection(EventLoop *loop, Socket *clientsock)
   clientchannel_ = new Channel(loop_, clientsock->fd());
   clientchannel_->setreadback(std::bind(&Connection::onMessage, this));
   clientchannel_->setcloseback(
-      std::bind(&Connection::closecallback, this)); // 这里的是在Tcpserver回调
+  std::bind(&Connection::closecallback, this)); // 这里的是在Tcpserver回调
   clientchannel_->seterrorback(std::bind(&Connection::errorcallback, this));
   clientchannel_->setwriteback(std::bind(&Connection::writecallback, this));
-  // clientchannel_->useet();
+  //clientchannel_->useet();
   clientchannel_->enablereading();
   // clientchannel.updatechannel(clientchannel);
 }
@@ -28,9 +28,19 @@ std::string Connection::ip() { return clientsock_->ip(); }
 // 返回port_
 uint16_t Connection::port() { return clientsock_->port(); }
 
-void Connection::closecallback() { closecallback_(shared_from_this()); }
+void Connection::closecallback() 
+{
+  disconnect_ = true;
+  clientchannel_->remove();
+  closecallback_(shared_from_this()); 
+}
 
-void Connection::errorcallback() { errorcallback_(shared_from_this()); }
+void Connection::errorcallback() 
+{
+  disconnect_ = true;
+  clientchannel_->remove();
+  errorcallback_(shared_from_this()); 
+}
 
 void Connection::setcloseback(std::function<void(spConnection)> fn) {
   closecallback_ = fn;
@@ -95,13 +105,16 @@ void Connection::onMessage() {
       break;
     } else if (nread == 0) // 客户端连接已断开，和上面的重复了
     {
+      //clientchannel_->remove();
       closecallback(); // 关闭客户端的fd。
       break;
     }
   }
 }
 
-void Connection::sendto_ob(const char *data, size_t size) {
+void Connection::sendto_ob(const char *data, size_t size) 
+{
+  if(disconnect_==true) {printf("客服端已断开了，send()直接返回。\n"); return ;}
   // 这里不一样了，这里进缓冲区的是报文长度+内容
   outputbuffer_.appendwithhead(data, size);
   // 注册写事件

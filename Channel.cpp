@@ -50,10 +50,21 @@ void Channel::disablewriting()
     events_=events_&~EPOLLOUT;
     loop_->updatechannel(this);
 }
-//把inepoll_成员设置为true;
-void Channel::setinepoll()
+void Channel::disableall()
 {
-    inepoll_=true;
+    events_=0;
+    loop_->updatechannel(this);
+}
+
+void Channel::remove()
+{
+    disableall();
+    loop_->removechannel(this);
+}
+//把inepoll_成员设置为true;
+void Channel::setinepoll(bool inepoll)
+{
+    inepoll_=inepoll;
 } 
 //外面的将uint32_t ev传进来，给revent_赋值
 void Channel::setrevent(uint32_t ev)
@@ -63,7 +74,7 @@ void Channel::setrevent(uint32_t ev)
 //返回inepoll_成员
 bool Channel::inepoll()
 {
-    return inepoll_;
+   return inepoll_;
 }
 
 uint32_t Channel::events()
@@ -80,6 +91,7 @@ void Channel::handleevent()
     if(revents_&EPOLLRDHUP)
     {
         //这里表示对方已关闭
+        remove();   //从事件删除Channel；
         closeback_();
     }
     else if(revents_&(EPOLLIN|EPOLLPRI))
@@ -106,6 +118,7 @@ void Channel::handleevent()
     }
     else 
     {
+        //remove();   //从事件删除Channel；
         errorback_();
     }
 }
@@ -164,3 +177,5 @@ void Channel::setwriteback(std::function<void ()>fn)
 {
     writeback_=fn;
 }
+
+

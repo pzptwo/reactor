@@ -11,7 +11,7 @@ using namespace std;
 EchoServer::EchoServer(const std::string ip,const uint16_t port,int subthreadNum,int workthreadNum):tcpserver_(ip,port,subthreadNum),
                         threadpool_(workthreadNum,"WORKS")
 {
-    tcpserver_.setnewConnectioncb(std::bind(&EchoServer::HandleClose,this,std::placeholders::_1));
+    tcpserver_.setnewConnectioncb(std::bind(&EchoServer::HandleNewConnection,this,std::placeholders::_1));
     tcpserver_.setclosecb(std::bind(&EchoServer::HandleClose,this,std::placeholders::_1));
     tcpserver_.seterrorcb(std::bind(&EchoServer::HandleError,this,std::placeholders::_1));
     tcpserver_.setslovemessagecb(std::bind(&EchoServer::HandleSlovemessage,this,std::placeholders::_1,std::placeholders::_2));
@@ -39,11 +39,12 @@ void EchoServer::HandleNewConnection(spConnection conn)
 void EchoServer::HandleClose(spConnection conn)
 {
     cout<<"EchoServer conn close"<<endl;
-}  
+} 
 
 void EchoServer::HandleError(spConnection conn)
 {
     cout<<"EchoServer conn error"<<endl;
+
 }
 void EchoServer::HandleSlovemessage(spConnection conn,std::string & message)
 {

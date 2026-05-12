@@ -40,6 +40,13 @@ TcpServer::~TcpServer()
         delete aa.second;
     }
     */
+
+    //释放从事件循环
+    for(auto &aa:subloop_)
+    {
+        delete aa;
+    }
+    delete threadpool_;
 }
 
 void TcpServer::start()

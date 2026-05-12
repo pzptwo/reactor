@@ -8,6 +8,8 @@
 #include <string>
 #include "Buffer.h"
 #include <memory>
+#include <atomic>
+
 
 //利用只能指针解决conn析构问题
 class Connection;
@@ -26,6 +28,7 @@ class Connection:public std::enable_shared_from_this<Connection>
         //取消完写事件，就可以是发送完毕
         std::function<void (spConnection)> sendCompletecb_;
         
+        std::atomic<bool> disconnect_;
         Buffer inputbuffer_;
         Buffer outputbuffer_;
         

@@ -44,7 +44,11 @@ class Channel
         void disablereading();
         void enablewriting();
         void disablewriting();
-        void setinepoll();  //把inepoll_成员设置为true;
+
+        //对于删，就是改fd关闭，没有任何事件了
+        void disableall();  //取消所有事件
+        
+        void setinepoll(bool inepoll);  //把inepoll_成员设置为true;
         void setrevent(uint32_t ev);   //外面的将uint32_t ev传进来，给revent_赋值
         bool inepoll(); //返回inepoll_成员
         uint32_t events();
@@ -59,4 +63,7 @@ class Channel
 
         void setcloseback(std::function<void ()>fn); 
         void seterrorback(std::function<void ()>fn); 
+
+        void remove();  //从事件循环删除Channel,因为fd关了，先取消事件，再删除，就更好。
+
 };

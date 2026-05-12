@@ -51,7 +51,7 @@ void Epoll::updatechannel(Channel *ch)
         if((epoll_ctl(epollfd_,EPOLL_CTL_MOD,ch->fd(),&ev))==-1)
         {
             perror("epoll_ctl failed \n");
-            exit(-1);
+            exit(-1);   //注意噶
         }
     }
     else
@@ -62,10 +62,23 @@ void Epoll::updatechannel(Channel *ch)
             exit(-1);
         }
         //这里已经挂书上来更新值
-        ch->setinepoll();
+        ch->setinepoll(true);
     }
 }   
 
+void Epoll::removechannel(Channel *ch)
+{
+    if(ch->inepoll())
+    {
+        printf("removechannel()\n");
+        if((epoll_ctl(epollfd_,EPOLL_CTL_DEL,ch->fd(),0))==-1)
+        {
+            perror("epoll_ctl failed \n");
+            exit(-1);
+        }
+        //ch->setinepoll(false);
+    }
+}
 //这里很妙使用了stl里面的vector去存放epoll_wait的evs;
 //还有一个参数timeout
 /*
