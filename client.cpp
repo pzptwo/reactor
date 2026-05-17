@@ -58,7 +58,6 @@ int main (int argc,char * argv[])
         
     }
         //这里就是io
-        sleep(1);   return 0;
         //这里是读取
         for(int i=0;i<1;i++)
     {
@@ -66,7 +65,7 @@ int main (int argc,char * argv[])
         recv(sockfd,&len,sizeof(len),0);    //读取头部
         memset(buf,0,sizeof(buf));
         recv(sockfd,buf,len,0);     //读取报文，从fd里面读取
-        cout<<"recv"<<buf<<endl;
+        cout<<" recv"<<buf<<endl;
     }
     sleep(100);
     //return 0;

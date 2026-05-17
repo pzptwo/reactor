@@ -8,23 +8,25 @@
 using namespace std;
 
 
-TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):threadNum_(threadNum)
+TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):threadNum_(threadNum),mainloop_(new EventLoop)
+                        ,acceptor_( Acceptor(mainloop_.get(),ip,port)),threadpool_(ThreadPool(threadNum_,"IO"))
 {
-    mainloop_=new EventLoop;//把动态内存创建出来，对应析构
+    //mainloop_=new EventLoop;//把动态内存创建出来，对应析构
     mainloop_->setepolltimeoutcb(std::bind(&TcpServer::epolltimeout,this,std::placeholders::_1));
-    acceptor_=new Acceptor(mainloop_,ip,port);
+    //acceptor_=new Acceptor(mainloop_.get(),ip,port);
     //刚刚启动，还没有socket所以不能传clientsock
-    acceptor_->setnewConnectioncb(std::bind(&TcpServer::newConnection,this,std::placeholders::_1));
+    acceptor_.setnewConnectioncb(std::bind(&TcpServer::newConnection,this,std::placeholders::_1));
 
     //完成线程池的创建
-    threadpool_=new ThreadPool(threadNum_,"IO");
+    //threadpool_=new ThreadPool(threadNum_,"IO");
     for(int i=0;i<threadNum_;i++)
     {
         //先当于子线程开始运行EventLoop,从容器里面去取
-        subloop_.push_back(new EventLoop);//这里的写法
+        //为啥要是改为智能指针后智能用emplace
+        subloop_.emplace_back(new EventLoop);//这里的写法
         subloop_[i]->setepolltimeoutcb(std::bind(&TcpServer::epolltimeout,this,std::placeholders::_1));
         //还要有相关启动，上面已经创建出来线程了，这里只需要把从事件循环放入到线程池的人物队列里面
-        threadpool_->addtask(std::bind(&EventLoop::run,subloop_[i]));   //这里打包表明是第几个循环
+        threadpool_.addtask(std::bind(&EventLoop::run,subloop_[i].get()));   //这里打包表明是第几个循环
 
     }
     
@@ -32,8 +34,8 @@ TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):thr
 TcpServer::~TcpServer()
 {
     //delete loop_;
-    delete acceptor_;
-    delete mainloop_;
+    //delete acceptor_;
+    //delete mainloop_;
     /*
     for(auto &aa:conns_)
     {
@@ -42,11 +44,11 @@ TcpServer::~TcpServer()
     */
 
     //释放从事件循环
-    for(auto &aa:subloop_)
-    {
-        delete aa;
-    }
-    delete threadpool_;
+    // for(auto &aa:subloop_)
+    // {
+    //     delete aa;
+    // }
+    //delete threadpool_;
 }
 
 void TcpServer::start()
@@ -56,11 +58,15 @@ void TcpServer::start()
 
 
 //处理新连接上来的
-void TcpServer::newConnection(Socket *clientsock)
+void TcpServer::newConnection(std::unique_ptr<Socket>clientsock)
 {
     //Connection *conn=new Connection(mainloop_,clientsock);//这里也没有释放，为了耦合低
     //让从事件循环运行连接
-    spConnection conn(new Connection(subloop_[clientsock->fd()%threadNum_],clientsock));
+
+    //防止move与unique_ptr
+    int fd=clientsock->fd();
+    //这里Connection里面输普通指针
+    spConnection conn(new Connection(subloop_[fd%threadNum_].get(),std::move(clientsock)));
     conn->setcloseback(std::bind(&TcpServer::closecallback,this,std::placeholders::_1));
     conn->seterrorback(std::bind(&TcpServer::errorcallback,this,std::placeholders::_1));
     conn->setslovecb(std::bind(&TcpServer::slovemessage,this,std::placeholders::_1,std::placeholders::_2));

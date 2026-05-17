@@ -1,9 +1,11 @@
 #include "Connection.h"
 #include "Channel.h"
+#include <utility>
 
-Connection::Connection(EventLoop *loop, Socket *clientsock)
-    : loop_(loop), clientsock_(clientsock) {
-  clientchannel_ = new Channel(loop_, clientsock->fd());
+Connection::Connection(EventLoop *loop, std::unique_ptr<Socket>clientsock)
+    : loop_(loop), clientsock_(std::move(clientsock)),clientchannel_(new Channel(loop_, clientsock_->fd()))
+{
+  //clientchannel_ = new Channel(loop_, clientsock_->fd());
   clientchannel_->setreadback(std::bind(&Connection::onMessage, this));
   clientchannel_->setcloseback(
   std::bind(&Connection::closecallback, this)); // 这里的是在Tcpserver回调
@@ -14,10 +16,10 @@ Connection::Connection(EventLoop *loop, Socket *clientsock)
   // clientchannel.updatechannel(clientchannel);
 }
 
-Connection::~Connection() {
-  delete clientchannel_;
-  delete clientsock_; // 这里相当于我拿走了new的全部
-
+Connection::~Connection() 
+{
+  //delete clientchannel_;
+  //delete clientsock_; // 这里相当于我拿走了new的全部
   //打印日志
   printf("conn已被析构\n");
 }

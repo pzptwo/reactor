@@ -9,7 +9,7 @@
 #include "Buffer.h"
 #include <memory>
 #include <atomic>
-
+#include <memory>
 
 //利用只能指针解决conn析构问题
 class Connection;
@@ -20,8 +20,8 @@ class Connection:public std::enable_shared_from_this<Connection>
 {
     private:
         EventLoop *loop_;   //Acceptor对应的事件循环，在构造函数中传入，一个对应一个
-        Socket *clientsock_;  //服务端用于监听的socket,在构建函数中创建
-        Channel *clientchannel_;    //  Acceptor对应的Channel，在构造函数中创建。
+        std::unique_ptr<Socket> clientsock_;  //服务端用于监听的socket,在构建函数中创建
+        std::unique_ptr<Channel> clientchannel_;    //  Acceptor对应的Channel，在构造函数中创建。
         std::function<void (spConnection)> closecallback_;
         std::function<void (spConnection)> errorcallback_;
         std::function<void(spConnection,std::string &)> slovemessagecallback_;
@@ -33,7 +33,7 @@ class Connection:public std::enable_shared_from_this<Connection>
         Buffer outputbuffer_;
         
     public:
-        Connection(EventLoop *loop,Socket *clientsock); //  
+        Connection(EventLoop *loop,std::unique_ptr<Socket> clientsock); //  
         ~Connection();
 
         int fd() const;

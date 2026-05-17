@@ -2,13 +2,14 @@
 #include "Epoll.h"
 #include <functional>
 #include <cstddef>
+#include <memory>
 
 class Epoll;
 
 class EventLoop
 {
     private:
-        Epoll *ep_=nullptr;
+        std::unique_ptr<Epoll> ep_;
         std::function<void (EventLoop *)> epolltimeoutcb_;
 
     public:

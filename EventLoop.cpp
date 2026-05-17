@@ -10,7 +10,7 @@ EventLoop::EventLoop():ep_(new Epoll)
  }
  EventLoop::~EventLoop()
 {
-    delete ep_;
+    //delete ep_;
 }
 
 void  EventLoop::run()
@@ -36,10 +36,7 @@ void  EventLoop::run()
     }
 }
 
-Epoll* EventLoop::ep()
-{
-    return ep_;
-}
+
 
 
 void EventLoop::setepolltimeoutcb(std::function<void (EventLoop *)> fn)

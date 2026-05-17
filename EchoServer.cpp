@@ -60,8 +60,8 @@ void EchoServer::onworkmessage(spConnection conn,std::string & message)
     message="reply"+message;
 
     //这里演示相当于回显业务work需要很长时间，但是io线程不需要很长时间，（conn在io被释放）
-    printf("业务处理完之后，需要调用connection对象");
-    sleep(2);
+    //printf("业务处理完之后，需要调用connection对象");
+    
     conn->sendto_ob(message.data(),message.size()); 
 }
 //对于最上层，要知道，数据已经发送完毕
