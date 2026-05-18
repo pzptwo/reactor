@@ -121,3 +121,8 @@ int main()
     return 0;
 }
 */
+
+size_t ThreadPool::threadSize()
+{
+    return thread_.size();
+}

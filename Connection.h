@@ -10,6 +10,7 @@
 #include <memory>
 #include <atomic>
 #include <memory>
+#include <sys/syscall.h>
 
 //利用只能指针解决conn析构问题
 class Connection;
@@ -49,8 +50,9 @@ class Connection:public std::enable_shared_from_this<Connection>
         void setsendCompletecb(std::function<void (spConnection)>fn);
         void onMessage();
 
-        //可以是把数据先放到outbuffer,然后注册写事件，
+        //可以是把数据先放到outbuffer,然后注册写事件，发送线程，不管是什么线程都是调用这个发送数据到
         void sendto_ob(const char* data,size_t size);
-
+        //发送数据，如果当前线程是IO线程，直接调用此函数，如是工作线程，把此函数传给IO线程
+        void sendinloop(const char* data,size_t size);
         void writecallback();
 };

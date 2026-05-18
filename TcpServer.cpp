@@ -4,7 +4,6 @@
 #include "Epoll.h"
 #include "EventLoop.h"
 #include <functional>
-#include <iostream>
 using namespace std;
 
 

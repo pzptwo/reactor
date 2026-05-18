@@ -114,9 +114,28 @@ void Connection::onMessage() {
   }
 }
 
+
 void Connection::sendto_ob(const char *data, size_t size) 
 {
   if(disconnect_==true) {printf("客服端已断开了，send()直接返回。\n"); return ;}
+  printf("Connection::sendto_ob thread is %ld\n",syscall(SYS_gettid));
+  //IO线程
+  if(loop_->isinloop())
+  {
+    printf("send()在事件循环中\n");
+    sendinloop(data,size);
+  }
+  //work 线程
+  else 
+  {
+    printf("send()不在事件循环中\n");
+    loop_->setinqueue(std::bind(&Connection::sendinloop,this,data,size));
+  }
+}
+
+//发送数据，如果当前线程是IO线程，直接调用此函数，如是工作线程，把此函数传给IO线程
+void Connection::sendinloop(const char* data,size_t size)
+{
   // 这里不一样了，这里进缓冲区的是报文长度+内容
   outputbuffer_.appendwithhead(data, size);
   // 注册写事件
@@ -125,6 +144,7 @@ void Connection::sendto_ob(const char *data, size_t size)
 
 void Connection::writecallback() {
   // 把outbuffer的数据发送出去
+  printf("Connection::writecallback thread is %ld\n",syscall(SYS_gettid));
   int writen = ::send(fd(), outputbuffer_.data(), outputbuffer_.size(), 0);
   if (writen > 0)
     outputbuffer_.erase(0, writen);

@@ -27,4 +27,6 @@ class ThreadPool
         ThreadPool(size_t threadNum,const std::string &threadType);
         void addtask(std::function<void ()> task); //和上面对应，因为对于c11，可以打包很多
         ~ThreadPool();
+
+        size_t threadSize();
 };
