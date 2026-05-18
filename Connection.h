@@ -3,6 +3,7 @@
 #include "Socket.h"
 #include "Channel.h"
 #include <cstddef>
+#include <ctime>
 #include <functional>
 #include <memory>
 #include <string>
@@ -13,6 +14,7 @@
 #include <sys/syscall.h>
 #include "Timestamp.h"
 
+class EventLoop;
 //利用只能指针解决conn析构问题
 class Connection;
 using spConnection=std::shared_ptr<Connection>;
@@ -56,4 +58,9 @@ class Connection:public std::enable_shared_from_this<Connection>
         //发送数据，如果当前线程是IO线程，直接调用此函数，如是工作线程，把此函数传给IO线程
         void sendinloop(const char* data,size_t size);
         void writecallback();
+
+        //检测Connection是否超时
+        bool timeout(time_t now,int val);
+
+
 };

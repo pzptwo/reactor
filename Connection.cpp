@@ -1,6 +1,7 @@
 #include "Connection.h"
 #include "Channel.h"
 #include "Timestamp.h"
+#include <ctime>
 #include <utility>
 
 Connection::Connection(EventLoop *loop, std::unique_ptr<Socket>clientsock)
@@ -158,3 +159,9 @@ void Connection::writecallback() {
 
   sendCompletecb_(shared_from_this());
 }
+
+bool Connection::timeout(time_t now ,int val)
+{
+  return now-lasttime_.toint()>val;
+}
+

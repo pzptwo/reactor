@@ -1,7 +1,9 @@
 #include "EventLoop.h"
 #include "Epoll.h"
 #include "Channel.h"
+#include <bits/types/struct_timeval.h>
 #include <cstdint>
+#include <cstdio>
 #include <functional>
 #include <mutex>
 #include <sys/syscall.h>
@@ -14,13 +16,15 @@ int createtimerfd(int sec=30)
     int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC|TFD_NONBLOCK);
     struct itimerspec timeout;
     memset(&timeout, 0, sizeof(struct itimerspec));
-    timeout.it_value.tv_sec = 5;       // 5 秒后第一次触发,这里应该不写死。
+    timeout.it_value.tv_sec = sec;       // 5 秒后第一次触发,这里应该不写死。
     timeout.it_value.tv_nsec = 0;
     timerfd_settime(tfd, 0, &timeout, 0);   //相当于alarm(5)
     return tfd;
 }
-EventLoop::EventLoop(bool mainloop):mainloop_(mainloop),ep_(new Epoll),wakefd_(eventfd(0,EFD_NONBLOCK)),wakechannel_ (new Channel(this,wakefd_ )),timerfd_(createtimerfd())
-                            ,timerfdchannel_(new Channel(this,timerfd_ ))
+EventLoop::EventLoop(bool mainloop,int timeval,int timeout):mainloop_(mainloop),timeval_(timeval),timeout_(timeout),
+                    ep_(new Epoll),wakefd_(eventfd(0,EFD_NONBLOCK)),wakechannel_ (new Channel(this,wakefd_ ))
+                    ,timerfd_(createtimerfd(timeout_))
+                    ,timerfdchannel_(new Channel(this,timerfd_ ))
 {
     wakechannel_->setreadback(std::bind(&EventLoop::handlewakeIO,this));
     wakechannel_->enablereading();
@@ -125,17 +129,55 @@ void EventLoop::wakeIO()
     // 重新计时——因为 timerfd 不会自动循环
     struct itimerspec timeout;
     memset(&timeout, 0, sizeof(struct itimerspec));
-    timeout.it_value.tv_sec = 5;
+    timeout.it_value.tv_sec = timeval_;
     timeout.it_value.tv_nsec = 0;
     timerfd_settime(timerfd_, 0, &timeout, 0);
 
     if(mainloop_==true)
     {
-        printf("主事件循环的闹钟响了\n");
+        //printf("主事件循环的闹钟响了\n");,、
+        //主事件没有Connection，只有Accepter
     }
     else
     {
-        printf("从事件循环的闹钟响了\n");
+        //printf("从事件循环的闹钟响了\n");
+        //一个从事件循环对应一个线程编号
+        printf("handletime() thread :%ld fd ",syscall(SYS_gettid));
+        //
+        //获取当前时间
+        time_t now=time(0);
+        //打印还有几个Connection->fd(mao 里面一个fd对应一个Connection)
+        for(auto aa:conns_)
+        {
+            printf("%d",aa.first);
+            //调用是否超时
+            if(aa.second->timeout(now, timeout_))
+            {
+                {
+                    std::lock_guard<std::mutex>gd(mmutex_);
+                    //timeout，从conn_里面删除
+                    conns_.erase(aa.first);
+                }
+               
+                //删除TcpServer
+                timerout_(aa.first);
+            }
+        }
+            printf("\n");
     }
+ }
+
+ void EventLoop::addnewConnection(spConnection conn)
+ {
+    {
+        std::lock_guard<std::mutex> gd(mmutex_);
+        conns_[conn->fd()]=conn;    //但是conn都是在Tcpserver里面，要去里面调用这个函数
+    }
+ }
+    
+
+ void EventLoop::settimerout(std::function<void(int )> fn)
+ {
+    timerout_=fn;
  }
 

@@ -8,13 +8,21 @@
 #include <thread>
 #include <queue>
 #include <mutex>
+#include <map>
+#include "Connection.h"
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>      // 定时器需要包含这个头文件。
-class Epoll;
 
+class Channel;
+class Epoll;
+class Connection;
+using spConnection=std::shared_ptr<Connection>;
 class EventLoop
 {
     private:
+        //闹钟时间间隔和超时参数化
+        int timeval_;
+        int timeout_;
         std::unique_ptr<Epoll> ep_;
         std::function<void (EventLoop *)> epolltimeoutcb_;
         pid_t threadspid_;
@@ -36,8 +44,17 @@ class EventLoop
 
         //不同的线程超时的处理方法不同
         bool mainloop_;
+        //Map容器->要设定一个往map里面添加Connection的方法
+        std::map<int, spConnection> conns_;
+
+        //设置回调容器
+        std::function<void(int )> timerout_;    //删除TcpServer中超时的Connection
+
+        std::mutex mmutex_;
+
+        
     public:
-        EventLoop(bool mainloop);
+        EventLoop(bool mainloop,int timeval=30,int timeout=80);
         ~EventLoop();
 
         void run();
@@ -58,6 +75,10 @@ class EventLoop
         //唤醒事件循环后，就要执行任务了（消费任务）
         void handlewakeIO ();
 
-        //定时器到了之后，就要执行的函数
+        //定时器到了之后，就要执行的函数,由于要操作conn,为了提高性能，则在这里map
         void handletime();
+        //往map里面添加Connection的方法
+        void addnewConnection(spConnection conn);
+        //设置回调(打包进入容器)
+        void settimerout(std::function<void(int )> fn);
 };

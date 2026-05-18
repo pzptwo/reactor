@@ -25,6 +25,8 @@
 #include <map>
 #include "ThreadPool.h"
 #include <memory>
+#include <mutex>
+
 //TCP 网络服务类
 class TcpServer
 {
@@ -44,6 +46,8 @@ class TcpServer
         std::function<void (spConnection,std::string &)> slovemessagecb_;
         std::function<void (spConnection)> sendCompletecb_;
         std::function<void (EventLoop *)> epolltimeoutcb_;
+
+        std::mutex mmtex_;
     public:
         //由于要完成bind所以需要传参
         TcpServer(const std::string ip,const uint16_t port,int threadNum=3);  //第三个参数初始化线程池
@@ -67,4 +71,7 @@ class TcpServer
         void setslovemessagecb(std::function<void (spConnection,std::string &)>fn);
         void setsendCompletecb(std::function<void (spConnection)>fn);
         void setepolltimeoutcb(std::function<void (EventLoop *)>fn);
+
+        //这里也要删除map,Connection,但是Tcpserver不直接，只能在EventLoop里面进行，采用回调
+        void removeconnection(int fd);
 };

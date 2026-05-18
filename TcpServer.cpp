@@ -4,10 +4,11 @@
 #include "Epoll.h"
 #include "EventLoop.h"
 #include <functional>
+#include <mutex>
 using namespace std;
 
 
-TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):threadNum_(threadNum),mainloop_(new EventLoop(true))
+TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):threadNum_(threadNum),mainloop_(new EventLoop(true,5,10))
                         ,acceptor_( Acceptor(mainloop_.get(),ip,port)),threadpool_(ThreadPool(threadNum_,"IO"))
 {
     //mainloop_=new EventLoop;//把动态内存创建出来，对应析构
@@ -22,11 +23,12 @@ TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):thr
     {
         //先当于子线程开始运行EventLoop,从容器里面去取
         //为啥要是改为智能指针后智能用emplace
-        subloop_.emplace_back(new EventLoop(false));//这里的写法
+        subloop_.emplace_back(new EventLoop(false,5,10));//这里的写法
         subloop_[i]->setepolltimeoutcb(std::bind(&TcpServer::epolltimeout,this,std::placeholders::_1));
+        subloop_[i]->settimerout(std::bind(&TcpServer::removeconnection,this,std::placeholders::_1));
         //还要有相关启动，上面已经创建出来线程了，这里只需要把从事件循环放入到线程池的人物队列里面
         threadpool_.addtask(std::bind(&EventLoop::run,subloop_[i].get()));   //这里打包表明是第几个循环
-
+        sleep(1);
     }
     
 }
@@ -73,8 +75,11 @@ void TcpServer::newConnection(std::unique_ptr<Socket>clientsock)
     // cout << "new Connection: fd=" << clientsock->fd()
     //         << ", ip=" << clientsock->ip()
     //         << ", port=" <<  clientsock->port()<< endl;
-    conns_[conn->fd()]=conn;
-
+    {
+        std::lock_guard<std::mutex>gd(mmtex_);
+        conns_[conn->fd()]=conn;
+    }
+    subloop_[conn->fd()%threadNum_]->addnewConnection(conn);    //这里的移动语义用完后，消失了，注意内存（不能调用一个不存在的）
     if(newConnectioncb_)newConnectioncb_(conn); //新建连接的时候，要等连接建立好才开始
 }
 
@@ -83,7 +88,11 @@ void TcpServer::closecallback(spConnection conn)
     if(closecb_) closecb_(conn); //关闭连接的时候，则是需要先回调
     //printf("client(eventfd=%d) disconnected.\n",conn->fd());
     //close(fd()); 
-    conns_.erase(conn->fd());
+    {
+        std::lock_guard<std::mutex>gd(mmtex_);
+        conns_.erase(conn->fd());
+    }
+    
     //delete conn;
 }
 
@@ -92,7 +101,11 @@ void TcpServer::errorcallback(spConnection conn)
     if(errorcb_)errorcb_(conn);
     //printf("client(eventfd=%d) error.\n",conn->fd());
     //close(conn->fd());
-    conns_.erase(conn->fd());
+    {
+        std::lock_guard<std::mutex>gd(mmtex_);
+        conns_.erase(conn->fd());
+    }
+    
     //delete conn;
 }
 
@@ -141,4 +154,13 @@ void TcpServer::setsendCompletecb(std::function<void (spConnection)>fn)
 void TcpServer::setepolltimeoutcb(std::function<void (EventLoop *)>fn)
 {
     epolltimeoutcb_=fn;
+}
+
+void TcpServer::removeconnection(int fd)
+{
+    {
+        std::lock_guard<std::mutex>gd(mmtex_);
+        conns_.erase(fd);   //map key
+    }
+    
 }
