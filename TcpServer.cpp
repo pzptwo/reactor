@@ -7,7 +7,7 @@
 using namespace std;
 
 
-TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):threadNum_(threadNum),mainloop_(new EventLoop)
+TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):threadNum_(threadNum),mainloop_(new EventLoop(true))
                         ,acceptor_( Acceptor(mainloop_.get(),ip,port)),threadpool_(ThreadPool(threadNum_,"IO"))
 {
     //mainloop_=new EventLoop;//把动态内存创建出来，对应析构
@@ -22,7 +22,7 @@ TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):thr
     {
         //先当于子线程开始运行EventLoop,从容器里面去取
         //为啥要是改为智能指针后智能用emplace
-        subloop_.emplace_back(new EventLoop);//这里的写法
+        subloop_.emplace_back(new EventLoop(false));//这里的写法
         subloop_[i]->setepolltimeoutcb(std::bind(&TcpServer::epolltimeout,this,std::placeholders::_1));
         //还要有相关启动，上面已经创建出来线程了，这里只需要把从事件循环放入到线程池的人物队列里面
         threadpool_.addtask(std::bind(&EventLoop::run,subloop_[i].get()));   //这里打包表明是第几个循环

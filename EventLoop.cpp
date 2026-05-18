@@ -7,10 +7,27 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-EventLoop::EventLoop():ep_(new Epoll),wakefd_(eventfd(0,EFD_NONBLOCK)),wakechannel_ (new Channel(this,wakefd_ ))
+
+//对于定时器的创建
+int createtimerfd(int sec=30)
+{
+    int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC|TFD_NONBLOCK);
+    struct itimerspec timeout;
+    memset(&timeout, 0, sizeof(struct itimerspec));
+    timeout.it_value.tv_sec = 5;       // 5 秒后第一次触发,这里应该不写死。
+    timeout.it_value.tv_nsec = 0;
+    timerfd_settime(tfd, 0, &timeout, 0);   //相当于alarm(5)
+    return tfd;
+}
+EventLoop::EventLoop(bool mainloop):mainloop_(mainloop),ep_(new Epoll),wakefd_(eventfd(0,EFD_NONBLOCK)),wakechannel_ (new Channel(this,wakefd_ )),timerfd_(createtimerfd())
+                            ,timerfdchannel_(new Channel(this,timerfd_ ))
 {
     wakechannel_->setreadback(std::bind(&EventLoop::handlewakeIO,this));
     wakechannel_->enablereading();
+
+    timerfdchannel_->setreadback(std::bind(&EventLoop::handletime,this));
+    timerfdchannel_->enablereading();
+
 }
  EventLoop::~EventLoop()
 {
@@ -101,5 +118,24 @@ void EventLoop::wakeIO()
         tmp();
     }
 
+ }
+
+ void EventLoop::handletime()
+ {
+    // 重新计时——因为 timerfd 不会自动循环
+    struct itimerspec timeout;
+    memset(&timeout, 0, sizeof(struct itimerspec));
+    timeout.it_value.tv_sec = 5;
+    timeout.it_value.tv_nsec = 0;
+    timerfd_settime(timerfd_, 0, &timeout, 0);
+
+    if(mainloop_==true)
+    {
+        printf("主事件循环的闹钟响了\n");
+    }
+    else
+    {
+        printf("从事件循环的闹钟响了\n");
+    }
  }
 

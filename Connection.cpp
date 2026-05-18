@@ -1,5 +1,6 @@
 #include "Connection.h"
 #include "Channel.h"
+#include "Timestamp.h"
 #include <utility>
 
 Connection::Connection(EventLoop *loop, std::unique_ptr<Socket>clientsock)
@@ -102,6 +103,8 @@ void Connection::onMessage() {
         tmpbuf.append(message);
         send(fd(),tmpbuf.data(),tmpbuf.size(),0);
         */
+        //服务器接受数据的最新时间
+        lasttime_=Timestamp::now();
         slovemessagecallback_(shared_from_this(), message);
       }
       break;

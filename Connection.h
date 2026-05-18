@@ -11,6 +11,7 @@
 #include <atomic>
 #include <memory>
 #include <sys/syscall.h>
+#include "Timestamp.h"
 
 //利用只能指针解决conn析构问题
 class Connection;
@@ -32,7 +33,7 @@ class Connection:public std::enable_shared_from_this<Connection>
         std::atomic<bool> disconnect_;
         Buffer inputbuffer_;
         Buffer outputbuffer_;
-        
+        Timestamp lasttime_;
     public:
         Connection(EventLoop *loop,std::unique_ptr<Socket> clientsock); //  
         ~Connection();
