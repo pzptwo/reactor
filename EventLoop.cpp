@@ -147,20 +147,23 @@ void EventLoop::wakeIO()
         //获取当前时间
         time_t now=time(0);
         //打印还有几个Connection->fd(mao 里面一个fd对应一个Connection)
-        for(auto aa:conns_)
+        for (auto it=conns_.begin();it!=conns_.end();)
+        
         {
-            printf("%d",aa.first);
-            //调用是否超时
-            if(aa.second->timeout(now, timeout_))
+            printf(" %d",it->first);
+            if (it->second->timeout(now,timeout_)) 
             {
+                printf("EventLoop::handletimer()1  thread is %d.\n",syscall(SYS_gettid)); 
+                int fd=it->first;
                 {
-                    std::lock_guard<std::mutex>gd(mmutex_);
-                    //timeout，从conn_里面删除
-                    conns_.erase(aa.first);
+                    std::lock_guard<std::mutex> gd(mmutex_);
+                    it=conns_.erase(it);                  // erase返回下一个有效迭代器。
                 }
-               
-                //删除TcpServer
-                timerout_(aa.first);
+                timerout_(fd);             // 从TcpServer的map中删除超时的conn。
+            }
+            else
+            {
+                ++it;
             }
         }
             printf("\n");

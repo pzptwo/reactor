@@ -14,7 +14,7 @@ int main(int argc,char *argv[])
     if(argc!=3)
     {
         printf("usage :ip port \n ");//argv顺序存
-        printf("./echoserver 192.168.152.128  5000\n\n");
+        printf("./echoserver 192.168.152.128 5000\n\n");
         return -1;
     }
 
@@ -39,7 +39,7 @@ int main(int argc,char *argv[])
     // tcpserver.start();
     EchoServer echoserver(argv[1],atoi(argv[2]),3,0);  //这里的后两个参数一个是IO线程的数量，一个是WORK的
     echoserver.start();
-
+    printf("已更改，名字\n");
     return 0;
 }
 
