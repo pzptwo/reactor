@@ -9,6 +9,7 @@
 #include <queue>
 #include <mutex>
 #include <map>
+#include <atomic>
 #include "Connection.h"
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>      // 定时器需要包含这个头文件。
@@ -52,6 +53,8 @@ class EventLoop
 
         std::mutex mmutex_;
 
+        //标志位说明事件循环停止
+        std::atomic_bool stop_;
         
     public:
         EventLoop(bool mainloop,int timeval=30,int timeout=80);
@@ -81,4 +84,7 @@ class EventLoop
         void addnewConnection(spConnection conn);
         //设置回调(打包进入容器)
         void settimerout(std::function<void(int )> fn);
+
+        //停止从事件循环
+        void stop();
 };

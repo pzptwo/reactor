@@ -51,8 +51,10 @@ void ThreadPool::addtask(std::function<void ()> task)
     this->condition_.notify_one();//唤醒一个堵塞队列的线程
 }
 
-ThreadPool::~ThreadPool()
+void ThreadPool::stop()
 {
+    //这里的防止重复停止啥意思
+    if(stop_) return ;
     this->stop_=true;
     //一定要唤醒！！！
     this->condition_.notify_all();
@@ -60,6 +62,11 @@ ThreadPool::~ThreadPool()
     {
         th.join();//这里会阻塞！！！
     }
+}
+
+ThreadPool::~ThreadPool()
+{
+    stop();
 }
 /*
 //测试

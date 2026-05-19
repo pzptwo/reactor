@@ -30,4 +30,7 @@ class EchoServer
         void onworkmessage(spConnection conn,std::string & message); //  这里是建立workthread的工作任务
         //对于最上层，要知道，是否超时,当Channel为空时，而且因为在eventloop里面，所以要说明是哪一个loop
         //void HandleEpolltimeout(EventLoop *loop);
+
+        //设置停止work线程
+        void stop();
 };

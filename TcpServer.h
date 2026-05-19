@@ -74,4 +74,7 @@ class TcpServer
 
         //这里也要删除map,Connection,但是Tcpserver不直接，只能在EventLoop里面进行，采用回调
         void removeconnection(int fd);
+
+        //停止IO（线程池）
+        void stop();
 };

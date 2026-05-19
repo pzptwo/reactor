@@ -113,7 +113,7 @@ void Channel::handleevent()
     else if(revents_&EPOLLOUT) // 有数据需要写，暂时没有代码，以后再说。
     {
         //要用回调写
-        printf("EPOLLOUT\n");
+        //printf("EPOLLOUT\n");
         writeback_();
     }
     else 

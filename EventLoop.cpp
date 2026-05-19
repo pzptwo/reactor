@@ -21,8 +21,8 @@ int createtimerfd(int sec=30)
     timerfd_settime(tfd, 0, &timeout, 0);   //相当于alarm(5)
     return tfd;
 }
-EventLoop::EventLoop(bool mainloop,int timeval,int timeout):mainloop_(mainloop),timeval_(timeval),timeout_(timeout),
-                    ep_(new Epoll),wakefd_(eventfd(0,EFD_NONBLOCK)),wakechannel_ (new Channel(this,wakefd_ ))
+EventLoop::EventLoop(bool mainloop,int timeval,int timeout):mainloop_(mainloop),timeval_(timeval),timeout_(timeout),stop_(false)
+                    ,ep_(new Epoll),wakefd_(eventfd(0,EFD_NONBLOCK)),wakechannel_ (new Channel(this,wakefd_ ))
                     ,timerfd_(createtimerfd(timeout_))
                     ,timerfdchannel_(new Channel(this,timerfd_ ))
 {
@@ -41,7 +41,7 @@ EventLoop::EventLoop(bool mainloop,int timeval,int timeout):mainloop_(mainloop),
 void  EventLoop::run()
 {
     threadspid_=syscall(SYS_gettid);
-    while(true)
+    while(stop_==false) //事件循环
     {
         std::vector<Channel *> channels;
           
@@ -61,6 +61,13 @@ void  EventLoop::run()
     }
 }
 
+void EventLoop::stop()
+{
+    //注意原子操作，给一个标志位
+    stop_=true;
+    //但是还未停止epoll_wait，只能去唤醒
+    wakeIO();   //让他直接是？？（）
+}
 
 
 
@@ -107,7 +114,7 @@ void EventLoop::wakeIO()
  //唤醒事件循环后，就要执行任务了（消费任务）
  void EventLoop::handlewakeIO ()
  {
-    printf("handlewakeIO thread is %ld\n",syscall(SYS_gettid));
+    //printf("handlewakeIO thread is %ld\n",syscall(SYS_gettid));
     uint64_t n;
     //要把eventfd的读出来，否则在水平触发会一直触发
     read(wakefd_,&n,sizeof(n));
@@ -142,7 +149,7 @@ void EventLoop::wakeIO()
     {
         //printf("从事件循环的闹钟响了\n");
         //一个从事件循环对应一个线程编号
-        printf("handletime() thread :%ld fd ",syscall(SYS_gettid));
+        //printf("handletime() thread :%ld fd ",syscall(SYS_gettid));
         //
         //获取当前时间
         time_t now=time(0);
@@ -150,10 +157,10 @@ void EventLoop::wakeIO()
         for (auto it=conns_.begin();it!=conns_.end();)
         
         {
-            printf(" %d",it->first);
+            //(" %d",it->first);
             if (it->second->timeout(now,timeout_)) 
             {
-                printf("EventLoop::handletimer()1  thread is %d.\n",syscall(SYS_gettid)); 
+                //printf("EventLoop::handletimer()1  thread is %d.\n",syscall(SYS_gettid)); 
                 int fd=it->first;
                 {
                     std::lock_guard<std::mutex> gd(mmutex_);
@@ -166,7 +173,7 @@ void EventLoop::wakeIO()
                 ++it;
             }
         }
-            printf("\n");
+            //printf("\n");
     }
  }
 

@@ -27,23 +27,32 @@ EchoServer::~EchoServer()
 void EchoServer::start()
 {
     tcpserver_.start();
-}  
+} 
+
+void EchoServer::stop()
+{
+    //停止自己的管的work线程(线程池)
+    threadpool_.stop();
+    //停止tcpserver管的IO
+    tcpserver_.stop();
+}
  //处理新连接上来的
 void EchoServer::HandleNewConnection(spConnection conn)
-{   
+{ 
+    printf("new connection (fd=%d,ip=%s,port=%d)ok \n",conn->fd(),conn->ip().c_str(),conn->port());
    //printf("HandleNewConnection thread is %ld\n",syscall(SYS_gettid));
-    cout<<"New Connection Come in "<<endl;
-
+    //cout<<"New Connection Come in "<<endl;
 }
 //我感觉取名有点问题
 void EchoServer::HandleClose(spConnection conn)
 {
-    cout<<"EchoServer conn close"<<endl;
+    printf("connection closed (fd=%d,ip=%s,port=%d)ok \n",conn->fd(),conn->ip().c_str(),conn->port());
+    //cout<<"EchoServer conn close"<<endl;
 } 
 
 void EchoServer::HandleError(spConnection conn)
 {
-    cout<<"EchoServer conn error"<<endl;
+    //cout<<"EchoServer conn error"<<endl;
 
 }
 void EchoServer::HandleSlovemessage(spConnection conn,std::string & message)
@@ -75,7 +84,7 @@ void EchoServer::onworkmessage(spConnection conn,std::string & message)
 //对于最上层，要知道，数据已经发送完毕
 void EchoServer::HandleSendComplete(spConnection conn)
 {
-    cout<<"Message Send cpmplete"<<endl;
+    //cout<<"Message Send cpmplete"<<endl;
 }
 
 //对于最上层，要知道，是否超时,当Channel为空时，而且因为在eventloop里面，所以要说明是哪一个loop

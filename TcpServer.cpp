@@ -28,7 +28,7 @@ TcpServer::TcpServer(const std::string ip,const uint16_t port,int threadNum):thr
         subloop_[i]->settimerout(std::bind(&TcpServer::removeconnection,this,std::placeholders::_1));
         //还要有相关启动，上面已经创建出来线程了，这里只需要把从事件循环放入到线程池的人物队列里面
         threadpool_.addtask(std::bind(&EventLoop::run,subloop_[i].get()));   //这里打包表明是第几个循环
-        sleep(1);
+        //sleep(1);
     }
     
 }
@@ -55,6 +55,23 @@ TcpServer::~TcpServer()
 void TcpServer::start()
 {
     mainloop_->run();
+}
+
+void TcpServer::stop()
+{
+    //这里为啥要三分种，而且顺序很重要
+    //先要停止主事件循环
+    mainloop_->stop();
+    printf("主事件循环已停止\n");
+    //停止从事件循环
+    for(int i=0;i<threadNum_;i++)
+    {
+        subloop_[i]->stop();
+    }
+    printf("从事件循环已停止\n");
+    //停止IO（线程池）
+    threadpool_.stop();
+    printf("IO线程池环已停止\n");
 }
 
 

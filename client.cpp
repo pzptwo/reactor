@@ -40,9 +40,9 @@ int main (int argc,char * argv[])
     
     cout<<"connect tcpepoll"<<endl;
     char buf[1024];
-    sleep(10000);
+    
 //发送与接收
-    for(int i=0;i<1;i++)
+    for(int i=0;i<10;i++)
     {
         memset(buf,0,sizeof(buf));
         sprintf(buf,"第%d次",i);

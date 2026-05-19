@@ -29,4 +29,7 @@ class ThreadPool
         ~ThreadPool();
 
         size_t threadSize();
+
+        //增加停止线程（因为是异步，所以不同于析构）
+        void stop();
 };
